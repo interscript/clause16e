@@ -1,0 +1,74 @@
+{
+  "run_id": "example-matched-split",
+  "seed": 20261117,
+  "model": {
+    "adapter": "hf",
+    "params": {
+      "name_or_path": "${CLAUSE16E_MODEL_PATH}",
+      "device": "${CLAUSE16E_DEVICE}",
+      "max_length": 4096,
+      "arch_note": "the release candidate checkpoint"
+    }
+  },
+  "surface": {
+    "local": true,
+    "_doc": "Local-processing attestation: the surface is the in-process HF transformers adapter (no third-party inference API, no retaining/logging surface); corpus-derived prompts are only ever submitted to this in-process surface, locally or inside the owner's gate job."
+  },
+  "corpus": {
+    "dir": "${CLAUSE16E_CORPUS_DIR}",
+    "_doc": "Protected-corpus shards, mounted read-only; data-access contract: environment paths only, nothing copied into any repo.",
+    "train_globs": ["train/shard-*.txt"],
+    "heldout_globs": [],
+    "group_lines": 32
+  },
+  "verbatim": {
+    "enabled": true,
+    "word_threshold": 25,
+    "_doc": "Floor fixed by the underlying license agreement; only tighten.",
+    "n_probes": 200,
+    "prefix_words": 10,
+    "max_new_tokens": 200,
+    "temperature": 0.0
+  },
+  "mia": {
+    "enabled": true,
+    "_doc": "Method of record: reference-calibrated loss difference (LiRA-style) on a MATCHED SPLIT. The matched split draws BOTH membership sets from the SAME train-shard chunk population — holdout_globs names the disjoint shard subset that forms held-out; the held-out sample's word-count distribution is matched to held-in via decile quantile bands, with a never-empty fallback to the full held-out population below the floor. A cross-collection split (held-in from train shards vs held-out from a different collection) measures collection difference, not membership — see docs/case-study.md for the falsification audit that derived this construction. Reference self control must sit at chance (0.5) or the probe FAILs as broken. Escalation clause: non-chance on a matched split with a domain-matched reference is genuine incremental memorization -> stop + escalate.",
+    "n_eval": 300,
+    "auc_tolerance": 0.05,
+    "success_rate_tolerance": 0.60,
+    "reference": {
+      "enabled": true,
+      "adapter": "hf",
+      "self_control": true,
+      "params": {
+        "name_or_path": "${CLAUSE16E_REFERENCE_MODEL_PATH}",
+        "device": "${CLAUSE16E_DEVICE}",
+        "max_length": 4096,
+        "arch_note": "DOMAIN-MATCHED reference: the candidate's own pre-adaptation base checkpoint — same tokenizer, same eval config, verified never trained on the protected corpus. Isolates corpus-specific memorization beyond legitimate lineage training"
+      }
+    },
+    "split_mode": "same_population",
+    "holdout_globs": [
+      "train/shard-06.txt",
+      "train/shard-07.txt"
+    ],
+    "length_parity": true
+  },
+  "extraction": {
+    "enabled": true,
+    "n_per_template": 25,
+    "canaries": [],
+    "_doc": "Defaults ship generic + corpus-prefix templates; add synthetic canaries if the training run embedded any."
+  },
+  "wordnet": {
+    "enabled": true,
+    "path": "${CLAUSE16E_WORDNET_PATH}",
+    "_doc": "Reference-resource synset file (JSONL: id, pos, gloss, example, lemma[, relations]); vocab scan is the authoritative check, embedding sub-probe off.",
+    "min_ngram_words": 5,
+    "embedding_probe": false
+  },
+  "output": {
+    "verdict_path": "reports/clause16e/{run_id}.verdict.json",
+    "records_dir": "artifacts/clause16e/{run_id}"
+  }
+}

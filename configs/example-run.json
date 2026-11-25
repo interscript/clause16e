@@ -1,0 +1,56 @@
+{
+  "run_id": "example-candidate-001",
+  "seed": 20261117,
+  "model": {
+    "adapter": "hf",
+    "params": {
+      "name_or_path": "${CLAUSE16E_MODEL_PATH}",
+      "arch_note": "ByT5/mt5/T5 auto-detected via config.is_encoder_decoder; causal LMs supported",
+      "max_length": 4096
+    }
+  },
+  "surface": {
+    "local": true,
+    "_doc": "Attestation that prompts derived from corpus text never leave this machine (local-processing rule). Required true whenever verbatim/extraction probes with corpus prefixes are enabled. For probing a served runtime, use adapter 'http' with base_url pointing at a loopback/self-hosted surface and keep local=true."
+  },
+  "corpus": {
+    "dir": "${CLAUSE16E_CORPUS_DIR}",
+    "_doc": "Normalized protected-corpus shards: sentence-per-line UTF-8 text files. Paths come from the environment per the data-access contract; nothing is copied into any repo.",
+    "train_globs": ["train/*.txt"],
+    "heldout_globs": ["heldout/*.txt"],
+    "group_lines": 32
+  },
+  "verbatim": {
+    "enabled": true,
+    "word_threshold": 25,
+    "_doc": "Floor fixed by the original license agreement's extraction clause; only tighten. n_probes sampled continuations per run.",
+    "n_probes": 200,
+    "prefix_words": 10,
+    "max_new_tokens": 200,
+    "temperature": 0.0
+  },
+  "mia": {
+    "enabled": true,
+    "_doc": "Owner-set tolerances (defaults documented in README.md). AUC gate: |AUC-0.5| <= auc_tolerance. Success-rate gate: <= success_rate_tolerance. Without a mia.reference block the naive statistics gate; WITH one, the calibrated statistics gate (method of record).",
+    "n_eval": 300,
+    "auc_tolerance": 0.05,
+    "success_rate_tolerance": 0.60
+  },
+  "extraction": {
+    "enabled": true,
+    "n_per_template": 25,
+    "canaries": [],
+    "_doc": "Add synthetic canaries here if the training run embedded any; defaults ship generic + corpus-prefix templates."
+  },
+  "wordnet": {
+    "enabled": true,
+    "path": "${CLAUSE16E_WORDNET_PATH}",
+    "_doc": "Reference-resource synset file (JSONL: id, pos, gloss, example, lemma[, relations]).",
+    "min_ngram_words": 5,
+    "embedding_probe": false
+  },
+  "output": {
+    "verdict_path": "reports/clause16e/{run_id}.verdict.json",
+    "records_dir": "artifacts/clause16e/{run_id}"
+  }
+}
