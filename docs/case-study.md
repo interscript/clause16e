@@ -94,7 +94,7 @@ provably never saw the held-in text.
 
 Re-running the clean candidate against a DOMAIN-MATCHED reference
 (the candidate's own lineage base, verified clean) moved the number
- barely: **0.6357** vs 0.6475 generic — still FAIL. The reference
+barely: **0.6357** vs 0.6475 generic — still FAIL. The reference
 choice was not the (only) confound.
 
 **Lesson 3: a signal that rises monotonically with model quality,
